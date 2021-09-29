@@ -105,3 +105,55 @@ def load_data():
     return df
 
 df = load_data()
+
+## sidebar - crypotocurrency selections
+sorted_coin = sorted(df['coin_symbol'])
+show_all_coins = col1.selectbox("Start with", ['Selected Coins Only', 'All Coins'])
+if show_all_coins == 'All Coins':
+    selected_coin = col1.multiselect('Cryptocurrency', sorted_coin, sorted_coin)
+else:
+    selected_coin = col1.multiselect('Cryptocurrency', sorted_coin, [])
+
+df_selected_coin = df[df['coin_symbol'].isin(selected_coin)]
+
+
+##sidebar number of coins to display
+num_coin = col1.slider('Display Top N Coins', 1, 100, 10)
+df_coins = df_selected_coin[:num_coin]
+
+## Sidebar - Percent Chnage timeframe
+percent_timeframe = col1.selectbox("% change time frame", ['1h', '7d', '24h', '1m', '3m'])
+percent_dict = {"3m":'percent_change_90d',"1m":'percent_change_30d',"7d":'percent_change_7d',"24h":'percent_change_24h',"1h":'percent_change_1h'}
+selected_percent_timeframe = percent_dict[percent_timeframe]
+
+## Sidebar - Sorting values
+sort_value = col1.selectbox('Sort values?', ['Yes', 'No'])
+
+col2.subheader("Price Data of Selected Cryptocurrency")
+col2.write("Data Dimension: " + str(df_selected_coin.shape[0])+ ' rows and ' + str(df_selected_coin.shape[1]) + ' columns.')
+
+col2.dataframe(df_coins)
+
+
+# Download CSV data
+def filedownload(df):
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
+    href = f'<a href="data:file/csv;base64,{b64}" download="crypto.csv">Download CSV File</a>'
+    return href
+
+col2.markdown(filedownload(df_selected_coin), unsafe_allow_html=True)
+
+# Preparing data for Bar plot of % Price change
+col2.subheader('Table of % Price Change')
+df_change = pd.concat([df_coins.coin_symbol, df_coins.percent_change_1h, df_coins.percent_change_24h, df_coins.percent_change_7d, df_coins.percent_change_30d, df_coins.percent_change_90d], axis = 1)
+df_change = df_change.set_index("coin_symbol")
+df_change['positive_percent_change_1h'] = df_change['percent_change_1h'] > 0
+df_change['positive_percent_change_24h'] = df_change['percent_change_24h'] > 0
+df_change['positive_percent_change_7d'] = df_change['percent_change_7d'] > 0
+df_change['positive_percent_change_30d'] = df_change['percent_change_30d'] > 0
+df_change['positive_percent_change_90d'] = df_change['percent_change_90d'] > 0
+col2.dataframe(df_change)
+
+# Conditional creation of Bar plot (time frame)
+col3.subheader('Bar plot of % Price change')
