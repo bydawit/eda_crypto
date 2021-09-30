@@ -118,7 +118,7 @@ with col1.container():
 df_selected_coin = df[df['coin_symbol'].isin(selected_coin)]
 
 ##sidebar number of coins to display
-num_coin = col1.slider('Display Top N Coins', 1, 100, len(selected_coin))
+num_coin = col1.slider('Display Top N Coins from selection', 1, 100, len(selected_coin))
 df_coins = df_selected_coin[:num_coin]
 
 ## Sidebar - Percent Chnage timeframe
@@ -165,7 +165,7 @@ col2.dataframe(df_change)
 # Conditional creation of Bar plot (time frame)
 if len(selected_coin) > 0:
     col3.subheader('Bar plot of % Price change')
-    bar_plot_height = max(5, min(len(selected_coin), 25))
+    bar_plot_height = max(1, min(len(selected_coin), 25))
     bar_plot_width = 5
 
     if percent_timeframe == '1h':
