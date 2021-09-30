@@ -1,4 +1,3 @@
-from typing import KeysView
 import streamlit as st
 from PIL import Image
 import pandas as pd
@@ -7,8 +6,6 @@ import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 import requests
 import json
-import time
-import PIL.ImageOps
 
 # Page layout
 ## full width
@@ -25,7 +22,7 @@ This app retrieves cryptocurrency prices for the top 100 cryptocurrency from the
 # About
 expander_bar = st.expander("About")
 expander_bar.markdown("""
-* **Python libraries:** base64, pandas, streamlit, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time
+* **Python libraries:** base64, pandas, streamlit, matplotlib, BeautifulSoup, requests, json
 * **Data source:** [CoinMarketCap](http://coinmarketcap.com).
 * **Credit:** Web scraper adapted from the Medium article *[Web Scraping Crypto Prices With Python](https://towardsdatascience.com/web-scraping-crypto-prices-with-python-41072ea5b5bf)* written by [Bryan Feng](https://medium.com/@bryanf).
 """)
@@ -108,14 +105,17 @@ df = load_data()
 
 ## sidebar - crypotocurrency selections
 sorted_coin = sorted(df['coin_symbol'])
-show_all_coins = col1.selectbox("Start with", ['Selected Coins Only', 'All Coins'])
-if show_all_coins == 'All Coins':
-    selected_coin = col1.multiselect('Cryptocurrency', sorted_coin, sorted_coin)
-else:
-    selected_coin = col1.multiselect('Cryptocurrency', sorted_coin, [])
+
+with col1.container():
+    selection, checkbox = st.columns((5, 1))
+    show_all_coins = checkbox.checkbox("All")
+    if show_all_coins:
+        selected_coin = selection.multiselect('Cryptocurrency', sorted_coin, sorted_coin)
+    else:
+        selected_coin = selection.multiselect('Cryptocurrency', sorted_coin, [])
+
 
 df_selected_coin = df[df['coin_symbol'].isin(selected_coin)]
-
 
 ##sidebar number of coins to display
 num_coin = col1.slider('Display Top N Coins', 1, 100, len(selected_coin))
@@ -130,7 +130,7 @@ selected_percent_timeframe = percent_dict[percent_timeframe]
 sort_value = col1.selectbox('Sort values?', ['Yes', 'No'])
 
 ## Sidebar - Plot theme
-plot_mode= col1.selectbox('Bar Plot Theme', ['White', 'Dark' ])
+plot_mode= col1.selectbox('Plot Theme', ['White', 'Dark' ])
 if plot_mode == 'Dark':
     plt.style.use('dark_background')
 else:
@@ -165,12 +165,14 @@ col2.dataframe(df_change)
 # Conditional creation of Bar plot (time frame)
 if len(selected_coin) > 0:
     col3.subheader('Bar plot of % Price change')
+    bar_plot_height = max(5, min(len(selected_coin), 25))
+    bar_plot_width = 5
 
     if percent_timeframe == '1h':
         if sort_value == 'Yes':
             df_change = df_change.sort_values(by = ['percent_change_1h'])
         col3.write('*1 hour period*')
-        plt.figure(figsize=(5,25))
+        plt.figure(figsize=(bar_plot_width,bar_plot_height))
         plt.subplots_adjust(top = 1 , bottom= 0)
         df_change['percent_change_1h'].plot(kind = 'barh', color = df_change.positive_percent_change_1h.map({True: 'g', False: 'r'}))
         col3.pyplot(plt)
@@ -178,7 +180,7 @@ if len(selected_coin) > 0:
         if sort_value == 'Yes':
             df_change = df_change.sort_values(by = ['percent_change_24h'])
         col3.write('*24 hour period*')
-        plt.figure(figsize=(5,25))
+        plt.figure(figsize=(bar_plot_width,bar_plot_height))
         plt.subplots_adjust(top = 1 , bottom= 0)
         df_change['percent_change_24h'].plot(kind = 'barh', color = df_change.positive_percent_change_24h.map({True: 'g', False: 'r'}))
         col3.pyplot(plt)
@@ -186,7 +188,7 @@ if len(selected_coin) > 0:
         if sort_value == 'Yes':
             df_change = df_change.sort_values(by = ['percent_change_7d'])
         col3.write('*7 day period*')
-        plt.figure(figsize=(5,25))
+        plt.figure(figsize=(bar_plot_width,bar_plot_height))
         plt.subplots_adjust(top = 1 , bottom= 0)
         df_change['percent_change_7d'].plot(kind = 'barh', color = df_change.positive_percent_change_7d.map({True: 'g', False: 'r'}))
         col3.pyplot(plt)
@@ -194,7 +196,7 @@ if len(selected_coin) > 0:
         if sort_value == 'Yes':
             df_change = df_change.sort_values(by = ['percent_change_30d'])
         col3.write('*1 month period*')
-        plt.figure(figsize=(5,25))
+        plt.figure(figsize=(bar_plot_width,bar_plot_height))
         plt.subplots_adjust(top = 1 , bottom= 0)
         df_change['percent_change_30d'].plot(kind = 'barh', color = df_change.positive_percent_change_30d.map({True: 'g', False: 'r'}))
         col3.pyplot(plt)
@@ -202,7 +204,7 @@ if len(selected_coin) > 0:
         if sort_value == 'Yes':
             df_change = df_change.sort_values(by = ['percent_change_90d'])
         col3.write('*3 month period*')
-        plt.figure(figsize=(5,25))
+        plt.figure(figsize=(bar_plot_width,bar_plot_height))
         plt.subplots_adjust(top = 1 , bottom= 0)
         df_change['percent_change_90d'].plot(kind = 'barh', color = df_change.positive_percent_change_90d.map({True: 'g', False: 'r'}))
         col3.pyplot(plt)
