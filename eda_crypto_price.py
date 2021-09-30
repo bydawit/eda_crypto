@@ -118,16 +118,23 @@ df_selected_coin = df[df['coin_symbol'].isin(selected_coin)]
 
 
 ##sidebar number of coins to display
-num_coin = col1.slider('Display Top N Coins', 1, 100, 10)
+num_coin = col1.slider('Display Top N Coins', 1, 100, len(selected_coin))
 df_coins = df_selected_coin[:num_coin]
 
 ## Sidebar - Percent Chnage timeframe
-percent_timeframe = col1.selectbox("% change time frame", ['1h', '7d', '24h', '1m', '3m'])
+percent_timeframe = col1.selectbox("% change time frame", ['1h', '24h', '7d', '1m', '3m'])
 percent_dict = {"3m":'percent_change_90d',"1m":'percent_change_30d',"7d":'percent_change_7d',"24h":'percent_change_24h',"1h":'percent_change_1h'}
 selected_percent_timeframe = percent_dict[percent_timeframe]
 
 ## Sidebar - Sorting values
 sort_value = col1.selectbox('Sort values?', ['Yes', 'No'])
+
+## Sidebar - Plot theme
+plot_mode= col1.selectbox('Bar Plot Theme', ['White', 'Dark' ])
+if plot_mode == 'Dark':
+    plt.style.use('dark_background')
+else:
+    plt.style.use('default')
 
 col2.subheader("Price Data of Selected Cryptocurrency")
 col2.write("Data Dimension: " + str(df_selected_coin.shape[0])+ ' rows and ' + str(df_selected_coin.shape[1]) + ' columns.')
@@ -156,4 +163,46 @@ df_change['positive_percent_change_90d'] = df_change['percent_change_90d'] > 0
 col2.dataframe(df_change)
 
 # Conditional creation of Bar plot (time frame)
-col3.subheader('Bar plot of % Price change')
+if len(selected_coin) > 0:
+    col3.subheader('Bar plot of % Price change')
+
+    if percent_timeframe == '1h':
+        if sort_value == 'Yes':
+            df_change = df_change.sort_values(by = ['percent_change_1h'])
+        col3.write('*1 hour period*')
+        plt.figure(figsize=(5,25))
+        plt.subplots_adjust(top = 1 , bottom= 0)
+        df_change['percent_change_1h'].plot(kind = 'barh', color = df_change.positive_percent_change_1h.map({True: 'g', False: 'r'}))
+        col3.pyplot(plt)
+    elif percent_timeframe == '24h':
+        if sort_value == 'Yes':
+            df_change = df_change.sort_values(by = ['percent_change_24h'])
+        col3.write('*24 hour period*')
+        plt.figure(figsize=(5,25))
+        plt.subplots_adjust(top = 1 , bottom= 0)
+        df_change['percent_change_24h'].plot(kind = 'barh', color = df_change.positive_percent_change_24h.map({True: 'g', False: 'r'}))
+        col3.pyplot(plt)
+    elif percent_timeframe == '7d':
+        if sort_value == 'Yes':
+            df_change = df_change.sort_values(by = ['percent_change_7d'])
+        col3.write('*7 day period*')
+        plt.figure(figsize=(5,25))
+        plt.subplots_adjust(top = 1 , bottom= 0)
+        df_change['percent_change_7d'].plot(kind = 'barh', color = df_change.positive_percent_change_7d.map({True: 'g', False: 'r'}))
+        col3.pyplot(plt)
+    elif percent_timeframe == '1m':
+        if sort_value == 'Yes':
+            df_change = df_change.sort_values(by = ['percent_change_30d'])
+        col3.write('*1 month period*')
+        plt.figure(figsize=(5,25))
+        plt.subplots_adjust(top = 1 , bottom= 0)
+        df_change['percent_change_30d'].plot(kind = 'barh', color = df_change.positive_percent_change_30d.map({True: 'g', False: 'r'}))
+        col3.pyplot(plt)
+    else:
+        if sort_value == 'Yes':
+            df_change = df_change.sort_values(by = ['percent_change_90d'])
+        col3.write('*3 month period*')
+        plt.figure(figsize=(5,25))
+        plt.subplots_adjust(top = 1 , bottom= 0)
+        df_change['percent_change_90d'].plot(kind = 'barh', color = df_change.positive_percent_change_90d.map({True: 'g', False: 'r'}))
+        col3.pyplot(plt)
